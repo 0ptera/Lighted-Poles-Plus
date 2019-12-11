@@ -141,10 +141,5 @@ end)
 script.on_configuration_changed(function(event)
   register_events()
   initialize()
-
-  if event.mod_changes[MOD_NAME] and event.mod_changes[MOD_NAME].old_version then
-    game.print("[LEP+] old version: "..event.mod_changes[MOD_NAME].old_version..", resetting all lamps.")
-    rebuild_lamps()
-  end
-
+  rebuild_lamps()
 end)

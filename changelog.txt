@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.4.2
+Date: 2019-12-11
+    Bugfixes:
+    - hidden lamps are rebuilt each time mod configuration changes in case pole entities where removed
+---------------------------------------------------------------------------------------------------
 Version: 1.4.1
 Date: 2019-09-25
   Changes:

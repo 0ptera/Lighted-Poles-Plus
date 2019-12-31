@@ -22,7 +22,7 @@ end
 script.on_event(defines.events.on_built_entity, EntityBuilt)
 script.on_event(defines.events.on_robot_built_entity, EntityBuilt)
 script.on_event(defines.events.script_raised_built, EntityBuilt)
-
+script.on_event(defines.events.script_raised_revive, EntityBuilt)
 
 
 function EntityRemoved(event)

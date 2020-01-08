@@ -10,12 +10,24 @@ local MOD_NAME = "LightedPolesPlus"
 
 function EntityBuilt(event)
   local entity = event.created_entity or event.entity
+  if not entity.valid then
+    return
+  end
 
-  if entity.valid and entity.type == "electric-pole" and global.pole_lamp_dict[entity.name] then
-    -- log("placing hidden lamp for "..entity.name.." at "..entity.position.x..","..entity.position.y )
-    local lamp = entity.surface.create_entity{name = global.pole_lamp_dict[entity.name], position = entity.position, force = entity.force}
-    lamp.destructible = false
-    lamp.minable = false
+  if entity.type == "electric-pole" then
+    -- upgrade planner only raises create events; find and destroy hidden lamps; also prevents multiple lamps on top of another
+    local lamps = entity.surface.find_entities_filtered {name = global.lamp_namelist, position = entity.position}
+    for _, lamp in pairs(lamps) do
+      -- log("removing hidden lamp "..lamp.name.." at "..entity.position.x..","..entity.position.y )
+      lamp.destroy()
+    end
+
+    if global.pole_lamp_dict[entity.name] then
+      -- log("placing hidden lamp for "..entity.name.." at "..entity.position.x..","..entity.position.y )
+      local lamp = entity.surface.create_entity{name = global.pole_lamp_dict[entity.name], position = entity.position, force = entity.force}
+      lamp.destructible = false
+      lamp.minable = false
+    end
   end
 end
 
@@ -27,11 +39,14 @@ script.on_event(defines.events.script_raised_revive, EntityBuilt)
 
 function EntityRemoved(event)
   local entity = event.entity
+  if not entity.valid then
+    return
+  end
 
-  if entity.valid and entity.type == "electric-pole" and global.pole_lamp_dict[entity.name] then
+  if entity.type == "electric-pole" and global.pole_lamp_dict[entity.name] then
     local lamps = entity.surface.find_entities_filtered {name = global.pole_lamp_dict[entity.name], position = entity.position}
     for _, lamp in pairs(lamps) do
-      -- log("removing hidden lamp of "..entity.name.." at "..entity.position.x..","..entity.position.y )
+      -- log("removing hidden lamp for "..entity.name.." at "..entity.position.x..","..entity.position.y )
       lamp.destroy()
     end
   end
@@ -96,26 +111,26 @@ local function initialize(event)
     end
   end
   -- log("[LEP+] DEBUG: pole names:"..serpent.block(global.pole_lamp_dict))
+
+  global.pole_namelist = {}
+  global.lamp_namelist = {"hidden-small-lamp"}
+  for pole_name, lamp_name in pairs(global.pole_lamp_dict) do
+    table.insert(global.pole_namelist, pole_name)
+    table.insert(global.lamp_namelist, lamp_name)
+  end
 end
 
 -- take care of orphaned lamps and poles
 -- removing all hidden lamps and placing them at lighted poles should be faster than checking for lamps without poles and poles without lamps
 local function rebuild_lamps()
-  local pole_namelist = {}
-  local lamp_namelist = {"hidden-small-lamp"}
-  for pole_name, lamp_name in pairs(global.pole_lamp_dict) do
-    table.insert(pole_namelist, pole_name)
-    table.insert(lamp_namelist, lamp_name)
-  end
-
   -- replace existing lamps
   for _, surface in pairs(game.surfaces) do
-    local lamps = surface.find_entities_filtered {name = lamp_namelist}
+    local lamps = surface.find_entities_filtered {name = global.lamp_namelist}
     for _, lamp in pairs(lamps) do
       lamp.destroy()
     end
 
-    local poles = surface.find_entities_filtered {name = pole_namelist}
+    local poles = surface.find_entities_filtered {name = global.pole_namelist}
     for _, pole in pairs(poles) do
       local lamp = pole.surface.create_entity{name = pole.name.."-lamp", position = pole.position, force = pole.force}
       if lamp then

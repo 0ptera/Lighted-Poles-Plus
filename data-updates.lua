@@ -80,10 +80,8 @@ for _, item in pairs (data.raw["item"]) do
 			local newName = "lighted-"..pole.name
 
       -- log("[LEP+] copying entity "..tostring(pole.name).." to "..tostring(newName))
-      local newPole = optera_lib.copy_prototype(pole, newName)
-      newPole.icons = optera_lib.create_icons(newPole, lep_icons_layer) or lep_icons_layer
-      newPole.icon = nil
-      newPole.icon_size= nil
+      local newPole = optera_lib.copy_prototype(pole, newName, true)
+      newPole.icons = optera_lib.create_icons(pole, lep_icons_layer) or lep_icons_layer
       newPole.localised_name = {"entity-name.lighted-pole", {"entity-name." .. pole.name}}
       if newPole.next_upgrade then
         newPole.next_upgrade = "lighted-"..newPole.next_upgrade
@@ -91,10 +89,8 @@ for _, item in pairs (data.raw["item"]) do
 
       -- log("[LEP+] copying item "..tostring(item.name).." to "..tostring(newName))
       items[item.name] = newName --save items for technology lookup
-      local newItem = optera_lib.copy_prototype(item, newName)
-      newItem.icons = optera_lib.create_icons(newItem, lep_icons_layer) or lep_icons_layer
-      newItem.icon = nil
-      newItem.icon_size= nil
+      local newItem = optera_lib.copy_prototype(item, newName, true)
+      newItem.icons = optera_lib.create_icons(item, lep_icons_layer) or lep_icons_layer
       newItem.localised_name = newPole.localised_name
       newItem.order = item.order.."-0"
       -- log("group: "..tostring(item.subgroup).." order: "..tostring(item.order) )
@@ -102,9 +98,7 @@ for _, item in pairs (data.raw["item"]) do
       newPole.icons = newPole.icons or newItem.icons -- use item icon for lighted pole in case base pole entity had none
 
 
-      local hidden_lamp = optera_lib.copy_prototype(data.raw["lamp"]["small-lamp"], newName.."-lamp")
-      hidden_lamp.icon = nil
-      hidden_lamp.icon_size = nil
+      local hidden_lamp = optera_lib.copy_prototype(data.raw["lamp"]["small-lamp"], newName.."-lamp", true)
       hidden_lamp.icons = newPole.icons
       hidden_lamp.localised_name = newPole.localised_name
       hidden_lamp.minable = nil

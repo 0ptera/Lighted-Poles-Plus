@@ -4,46 +4,28 @@
 * See LICENSE.md in the project directory for license information.
 --]]
 
-local MOD_NAME = "LightedPolesPlus"
-
 -- local logger = require("__OpteraLib__.script.logger")
+local Pole_Filter = { filter="type", type="electric-pole" }
 
-function EntityBuilt(event)
-  local entity = event.created_entity or event.entity
-  if not entity.valid then
-    return
+
+local function Pole_Created(entity)
+  -- upgrade planner only raises create events; find and destroy hidden lamps; also prevents multiple lamps on top of another
+  local lamps = entity.surface.find_entities_filtered {name = global.lamp_namelist, position = entity.position}
+  for _, lamp in pairs(lamps) do
+    -- log("removing hidden lamp "..lamp.name.." at "..entity.position.x..","..entity.position.y )
+    lamp.destroy()
   end
 
-  if entity.type == "electric-pole" then
-    -- upgrade planner only raises create events; find and destroy hidden lamps; also prevents multiple lamps on top of another
-    local lamps = entity.surface.find_entities_filtered {name = global.lamp_namelist, position = entity.position}
-    for _, lamp in pairs(lamps) do
-      -- log("removing hidden lamp "..lamp.name.." at "..entity.position.x..","..entity.position.y )
-      lamp.destroy()
-    end
-
-    if global.pole_lamp_dict[entity.name] then
-      -- log("placing hidden lamp for "..entity.name.." at "..entity.position.x..","..entity.position.y )
-      local lamp = entity.surface.create_entity{name = global.pole_lamp_dict[entity.name], position = entity.position, force = entity.force}
-      lamp.destructible = false
-      lamp.minable = false
-    end
+  if global.pole_lamp_dict[entity.name] then
+    -- log("placing hidden lamp for "..entity.name.." at "..entity.position.x..","..entity.position.y )
+    local lamp = entity.surface.create_entity{name = global.pole_lamp_dict[entity.name], position = entity.position, force = entity.force}
+    lamp.destructible = false
+    lamp.minable = false
   end
 end
 
-script.on_event(defines.events.on_built_entity, EntityBuilt)
-script.on_event(defines.events.on_robot_built_entity, EntityBuilt)
-script.on_event(defines.events.script_raised_built, EntityBuilt)
-script.on_event(defines.events.script_raised_revive, EntityBuilt)
-
-
-function EntityRemoved(event)
-  local entity = event.entity
-  if not entity.valid then
-    return
-  end
-
-  if entity.type == "electric-pole" and global.pole_lamp_dict[entity.name] then
+local function Pole_Removed(entity)
+  if global.pole_lamp_dict[entity.name] then
     local lamps = entity.surface.find_entities_filtered {name = global.pole_lamp_dict[entity.name], position = entity.position}
     for _, lamp in pairs(lamps) do
       -- log("removing hidden lamp for "..entity.name.." at "..entity.position.x..","..entity.position.y )
@@ -52,10 +34,6 @@ function EntityRemoved(event)
   end
 end
 
-script.on_event(defines.events.on_pre_player_mined_item, EntityRemoved)
-script.on_event(defines.events.on_entity_died, EntityRemoved)
-script.on_event(defines.events.on_robot_pre_mined, EntityRemoved)
-script.on_event(defines.events.script_raised_destroy, EntityRemoved)
 
 --[[
 Event table returned with the event
@@ -77,6 +55,46 @@ function EntityMoved(event)
 end
 
 local function register_events()
+  -- register creation events
+  script.on_event( defines.events.on_built_entity,
+    function(event) Pole_Created(event.created_entity) end,
+    {Pole_Filter}
+  )
+  script.on_event( defines.events.on_robot_built_entity,
+    function(event) Pole_Created(event.created_entity) end,
+    {Pole_Filter}
+  )
+  script.on_event( {defines.events.script_raised_built, defines.events.script_raised_revive},
+    function(event)
+      local entity = event.entity
+      if entity.valid and entity.type == "electric-pole" then
+        Pole_Created(entity)
+      end
+    end
+  )
+
+  -- register removal events
+  script.on_event( defines.events.on_pre_player_mined_item,
+    function(event) Pole_Removed(event.entity) end,
+    {Pole_Filter}
+  )
+  script.on_event( defines.events.on_entity_died,
+    function(event) Pole_Removed(event.entity) end,
+    {Pole_Filter}
+  )
+  script.on_event( defines.events.on_robot_pre_mined,
+    function(event) Pole_Removed(event.entity) end,
+    {Pole_Filter}
+  )
+  script.on_event( defines.events.script_raised_destroy,
+    function(event)
+      local entity = event.entity
+      if entity.valid and entity.type == "electric-pole" then
+        Pole_Removed(entity)
+      end
+    end
+  )
+
   --register to PickerExtended
   if remote.interfaces["picker"] and remote.interfaces["picker"]["dolly_moved_entity_id"] then
     script.on_event(remote.call("picker", "dolly_moved_entity_id"), EntityMoved)
@@ -102,7 +120,7 @@ local function initialize(event)
   end
 
   -- build name lists for lighted poles and lamps
-  local prototype_poles = game.get_filtered_entity_prototypes{ {filter="type", type="electric-pole"} }
+  local prototype_poles = game.get_filtered_entity_prototypes{ Pole_Filter }
   local prototype_lamps = game.get_filtered_entity_prototypes{ {filter="type", type="lamp"} }
   global.pole_lamp_dict = {}
   for name, pole in pairs(prototype_poles) do

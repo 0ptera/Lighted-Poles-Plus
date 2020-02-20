@@ -9,18 +9,20 @@ local Pole_Filter = { filter="type", type="electric-pole" }
 
 
 local function Pole_Created(entity)
-  -- upgrade planner only raises create events; find and destroy hidden lamps; also prevents multiple lamps on top of another
-  local lamps = entity.surface.find_entities_filtered {name = global.lamp_namelist, position = entity.position}
-  for _, lamp in pairs(lamps) do
-    -- log("removing hidden lamp "..lamp.name.." at "..entity.position.x..","..entity.position.y )
-    lamp.destroy()
-  end
+  if entity.type == "electric-pole" then
+    -- upgrade planner only raises create events; find and destroy hidden lamps; also prevents multiple lamps on top of another
+    local lamps = entity.surface.find_entities_filtered {name = global.lamp_namelist, position = entity.position}
+    for _, lamp in pairs(lamps) do
+      -- log("removing hidden lamp "..lamp.name.." at "..entity.position.x..","..entity.position.y )
+      lamp.destroy()
+    end
 
-  if global.pole_lamp_dict[entity.name] then
-    -- log("placing hidden lamp for "..entity.name.." at "..entity.position.x..","..entity.position.y )
-    local lamp = entity.surface.create_entity{name = global.pole_lamp_dict[entity.name], position = entity.position, force = entity.force}
-    lamp.destructible = false
-    lamp.minable = false
+    if global.pole_lamp_dict[entity.name] then
+      -- log("placing hidden lamp for "..entity.name.." at "..entity.position.x..","..entity.position.y )
+      local lamp = entity.surface.create_entity{name = global.pole_lamp_dict[entity.name], position = entity.position, force = entity.force}
+      lamp.destructible = false
+      lamp.minable = false
+    end
   end
 end
 

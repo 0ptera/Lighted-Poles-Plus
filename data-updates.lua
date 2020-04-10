@@ -75,9 +75,9 @@ for _, item in pairs (data.raw["item"]) do
     -- log("[LEP+] found pole "..item.place_result.." in item "..item.name)
     local pole = data.raw["electric-pole"][item.place_result]
     if pole.minable and pole.minable.result and pole.minable.result == item.name then -- only generate lighted pole if item and entity properly reference another
-			pole.fast_replaceable_group = pole.fast_replaceable_group or "electric-pole"
+      pole.fast_replaceable_group = pole.fast_replaceable_group or "electric-pole"
 
-			local newName = "lighted-"..pole.name
+      local newName = "lighted-"..pole.name
 
       -- log("[LEP+] copying entity "..tostring(pole.name).." to "..tostring(newName))
       local newPole = optera_lib.copy_prototype(pole, newName, true)

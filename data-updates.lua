@@ -4,7 +4,7 @@
  * See LICENSE.md in the project directory for license information.
 --]]
 
-local optera_lib = require("__OpteraLib__.data.utilities")
+local flib = require('__flib__.data_util')
 
 local light_scale = settings.startup["lepp_light_size_factor"].value
 local light_size_limit = settings.startup["lepp_light_max_size"].value
@@ -15,33 +15,31 @@ local pole_entity_blacklist = {
   ["bi-power-to-rail-pole"] = true,
   ["bi-rail-hidden-power-pole"] = true,
 }
-local technology_overwrite = {
-  ["basic-electronics"] = "optics", -- override for early 0.17
-  ["basic-mining"] = "optics", -- override for 0.17.4x
- }
 
-local items = {}  -- dictionary [original pole item] -> lighted pole entity/item/recipe
+local alternative_technology = "optics"
+
+local pole_names = {}  -- dictionary [original pole item name] -> lighted pole entity/item/recipe name
 local lightedPoles = {}
 
 
- -- check if recipe contains entry from Items
+-- check if recipe contains entry from Items
 function GetItemFromRecipeResult(recipe)
-  if recipe.result and items[recipe.result] then
+  if recipe.result and pole_names[recipe.result] then
     -- log(tostring(recipe.result).." found in "..tostring(recipe.name)..".result")
     return recipe.result
   end
-  if recipe.normal and recipe.normal.result and items[recipe.normal.result] then
+  if recipe.normal and recipe.normal.result and pole_names[recipe.normal.result] then
     -- log(tostring(recipe.normal.result).." found in "..tostring(recipe.name)..".normal.result")
     return recipe.normal.result
   end
-  if recipe.expensive and recipe.expensive.result and items[recipe.expensive.result] then
+  if recipe.expensive and recipe.expensive.result and pole_names[recipe.expensive.result] then
     -- log(tostring(recipe.expensive.result).." found in "..tostring(recipe.name)..".expensive.result")
     return recipe.expensive.result
   end
 
   if recipe.results then
     for _, item in pairs(recipe.results) do
-      if item.name and ( not item.type or item.type == "item") and items[item.name] then
+      if item.name and ( not item.type or item.type == "item") and pole_names[item.name] then
         -- log(tostring(item.name).." found in "..tostring(recipe.name)..".results")
         return item.name
       end
@@ -49,7 +47,7 @@ function GetItemFromRecipeResult(recipe)
   end
   if recipe.normal and recipe.normal.results then
     for _, item in pairs(recipe.normal.results) do
-      if item.name and ( not item.type or item.type == "item") and items[item.name] then
+      if item.name and ( not item.type or item.type == "item") and pole_names[item.name] then
         -- log(tostring(item.name).." found in "..tostring(recipe.name)..".normal.results")
         return item.name
       end
@@ -57,7 +55,7 @@ function GetItemFromRecipeResult(recipe)
   end
   if recipe.expensive and recipe.expensive.results then
     for _, item in pairs(recipe.expensive.results) do
-      if item.name and ( not item.type or item.type == "item") and items[item.name] then
+      if item.name and ( not item.type or item.type == "item") and pole_names[item.name] then
         -- log(tostring(item.name).." found in "..tostring(recipe.name)..".expensive.results")
         return item.name
       end
@@ -80,17 +78,17 @@ for _, item in pairs (data.raw["item"]) do
       local newName = "lighted-"..pole.name
 
       -- log("[LEP+] copying entity "..tostring(pole.name).." to "..tostring(newName))
-      local newPole = optera_lib.copy_prototype(pole, newName, true)
-      newPole.icons = optera_lib.create_icons(pole, lep_icons_layer) or lep_icons_layer
+      local newPole = flib.copy_prototype(pole, newName, true)
+      newPole.icons = flib.create_icons(pole, lep_icons_layer) or lep_icons_layer
       newPole.localised_name = {"entity-name.lighted-pole", {"entity-name." .. pole.name}}
       if newPole.next_upgrade then
         newPole.next_upgrade = "lighted-"..newPole.next_upgrade
       end
 
       -- log("[LEP+] copying item "..tostring(item.name).." to "..tostring(newName))
-      items[item.name] = newName --save items for technology lookup
-      local newItem = optera_lib.copy_prototype(item, newName, true)
-      newItem.icons = optera_lib.create_icons(item, lep_icons_layer) or lep_icons_layer
+      pole_names[item.name] = newName --save name for technology lookup
+      local newItem = flib.copy_prototype(item, newName, true)
+      newItem.icons = flib.create_icons(item, lep_icons_layer) or lep_icons_layer
       newItem.localised_name = newPole.localised_name
       newItem.order = item.order.."-0"
       -- log("group: "..tostring(item.subgroup).." order: "..tostring(item.order) )
@@ -98,7 +96,7 @@ for _, item in pairs (data.raw["item"]) do
       newPole.icons = newPole.icons or newItem.icons -- use item icon for lighted pole in case base pole entity had none
 
 
-      local hidden_lamp = optera_lib.copy_prototype(data.raw["lamp"]["small-lamp"], newName.."-lamp", true)
+      local hidden_lamp = flib.copy_prototype(data.raw["lamp"]["small-lamp"], newName.."-lamp", true)
       hidden_lamp.icons = newPole.icons
       hidden_lamp.localised_name = newPole.localised_name
       hidden_lamp.minable = nil
@@ -176,25 +174,44 @@ for _, item in pairs (data.raw["item"]) do
 end
 data:extend(lightedPoles)
 
- -- add to technology
+local recipes_found = {}
+-- add to technology
 for _, tech in pairs(data.raw["technology"]) do
-  local tech_name = technology_overwrite[tech.name] or tech.name
   if tech.effects then
     for _, effect in pairs(tech.effects) do
       if effect.recipe and data.raw["recipe"][effect.recipe] then
         local base_item = GetItemFromRecipeResult(data.raw["recipe"][effect.recipe])
         if base_item then
-          if data.raw["technology"][tech_name].effects then
-            log("[LEP+] found original pole "..base_item.." in technology "..tech.name..", inserting "..items[base_item].." into technology "..tech_name)
-            table.insert(data.raw["technology"][tech_name].effects, {type="unlock-recipe",recipe=items[base_item]})
+          if data.raw["technology"][tech.name].effects then
+            log("[LEP+] found original pole "..base_item.." in technology "..tech.name..", inserting "..pole_names[base_item].." into technology "..tech.name)
+            table.insert(data.raw["technology"][tech.name].effects, {type="unlock-recipe",recipe=pole_names[base_item]})
           else
-            log("[LEP+] found original pole "..base_item.." in technology "..tech.name..", creating new effects table for "..items[base_item].." in technology "..tech_name)
-            data.raw["technology"][tech_name].effects = {type="unlock-recipe",recipe=items[base_item]}
+            log("[LEP+] found original pole "..base_item.." in technology "..tech.name..", creating new effects table for "..pole_names[base_item].." in technology "..tech.name)
+            data.raw["technology"][tech.name].effects = {type="unlock-recipe",recipe=pole_names[base_item]}
           end
-          -- allow adding to multiple unlocks for 0.17.61
-          -- items[base_item] = nil -- track inserted pole by removing entry
+          -- multiple techs may unlock the same recipe
+          recipes_found[base_item] = recipes_found[base_item] and recipes_found[base_item] + 1 or 1
+          -- pole_names[base_item] = nil
         end
       end
     end
   end
+end
+
+-- add unassigned recipes to optics
+local tech = data.raw.technology[alternative_technology]
+if tech then
+  for original_pole, lighted_pole in pairs(pole_names) do
+    if not recipes_found[original_pole] then
+      if tech.effects then
+        log("[LEP+] no technology unlock found for "..original_pole..", inserting "..lighted_pole.." into technology "..tech.name)
+        table.insert(tech.effects, {type="unlock-recipe", recipe=lighted_pole})
+      else
+        log("[LEP+] no technology unlock found for "..original_pole..", creating new effects table for "..lighted_pole.." in technology "..tech.name)
+        tech.effects = {type="unlock-recipe", recipe=lighted_pole}
+      end
+    end
+  end
+else
+  error("Technology "..alternative_technology.." not found")
 end

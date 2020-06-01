@@ -14,6 +14,15 @@ local pole_entity_blacklist = {
   -- Bio Industries
   ["bi-power-to-rail-pole"] = true,
   ["bi-rail-hidden-power-pole"] = true,
+  -- Tesseract
+  ["CW-ts-power-leech-pole-1"] = true,
+  ["CW-ts-power-leech-pole-2"] = true,
+  ["CW-ts-power-leech-pole-3"] = true,
+  ["CW-ts-power-leech-pole-4"] = true,
+  ["CW-ts-power-source-pole-1"] = true,
+  ["CW-ts-power-source-pole-2"] = true,
+  ["CW-ts-power-source-pole-3"] = true,
+  ["CW-ts-power-source-pole-4"] = true,
 }
 
 local alternative_technology = "optics"

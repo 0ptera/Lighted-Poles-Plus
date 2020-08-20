@@ -23,6 +23,9 @@ local pole_entity_blacklist = {
   ["CW-ts-power-source-pole-2"] = true,
   ["CW-ts-power-source-pole-3"] = true,
   ["CW-ts-power-source-pole-4"] = true,
+  -- Editor Extension
+  ["ee-super-electric-pole"] = true,
+  ["ee-super-substation"] = true,
 }
 
 local alternative_technology = "optics"

@@ -4,7 +4,7 @@
  * See LICENSE.md in the project directory for license information.
 --]]
 
-local flib = require('__flib__.data_util')
+local flib = require('__flib__.data-util')
 
 local light_scale = settings.startup["lepp_light_size_factor"].value
 local light_size_limit = settings.startup["lepp_light_max_size"].value

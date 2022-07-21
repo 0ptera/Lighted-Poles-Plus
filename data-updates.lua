@@ -156,8 +156,16 @@ for _, item in pairs (data.raw["item"]) do
 
       -- find original recipe so new recipe can be sorted next to it
       for _, recipe in pairs (data.raw["recipe"]) do
+        if recipe.results then
+          for _, r in pairs(recipe.results) do
+            if (not r.type or r.type == "item") and r.name and r.name == item.name then
+              if recipe.subgroup then newRecipe.subgroup = recipe.subgroup end
+              if recipe.order then newRecipe.order = recipe.order.."-0" end
+              break
+            end
+          end
         -- take first recipe
-        if recipe.result == item.name then
+        elseif recipe.result == item.name then
           if recipe.subgroup then newRecipe.subgroup = recipe.subgroup end
           if recipe.order then newRecipe.order = recipe.order.."-0" end
           break

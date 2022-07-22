@@ -4,6 +4,7 @@
  * See LICENSE.md in the project directory for license information.
 --]]
 
+local format = string.format
 local flib = require('__flib__.data-util')
 
 local light_scale = settings.startup["lepp_light_size_factor"].value
@@ -23,39 +24,33 @@ local lightedPoles = {}
 -- check if recipe contains entry from Items
 function GetItemFromRecipeResult(recipe)
   if recipe.result and pole_names[recipe.result] then
-    -- log(tostring(recipe.result).." found in "..tostring(recipe.name)..".result")
     return recipe.result
   end
   if recipe.normal and recipe.normal.result and pole_names[recipe.normal.result] then
-    -- log(tostring(recipe.normal.result).." found in "..tostring(recipe.name)..".normal.result")
     return recipe.normal.result
   end
   if recipe.expensive and recipe.expensive.result and pole_names[recipe.expensive.result] then
-    -- log(tostring(recipe.expensive.result).." found in "..tostring(recipe.name)..".expensive.result")
     return recipe.expensive.result
   end
 
   if recipe.results then
-    for _, item in pairs(recipe.results) do
-      if item.name and ( not item.type or item.type == "item") and pole_names[item.name] then
-        -- log(tostring(item.name).." found in "..tostring(recipe.name)..".results")
-        return item.name
+    for _, r in pairs(recipe.results) do
+      if (not r.type or r.type == "item") and (r.name and pole_names[r.name] or pole_names[r[1]]) then
+        return r.name or r[1]
       end
     end
   end
   if recipe.normal and recipe.normal.results then
     for _, item in pairs(recipe.normal.results) do
-      if item.name and ( not item.type or item.type == "item") and pole_names[item.name] then
-        -- log(tostring(item.name).." found in "..tostring(recipe.name)..".normal.results")
-        return item.name
+      if (not r.type or r.type == "item") and (r.name and pole_names[r.name] or pole_names[r[1]]) then
+        return r.name or r[1]
       end
     end
   end
   if recipe.expensive and recipe.expensive.results then
     for _, item in pairs(recipe.expensive.results) do
-      if item.name and ( not item.type or item.type == "item") and pole_names[item.name] then
-        -- log(tostring(item.name).." found in "..tostring(recipe.name)..".expensive.results")
-        return item.name
+      if (not r.type or r.type == "item") and (r.name and pole_names[r.name] or pole_names[r[1]]) then
+        return r.name or r[1]
       end
     end
   end
@@ -70,7 +65,6 @@ for _, item in pairs (data.raw["item"]) do
   if item.place_result and data.raw["electric-pole"][item.place_result] and not pole_entity_blacklist[item.place_result] then
     -- log("[LEP+] found pole "..item.place_result.." in item "..item.name)
     local pole = data.raw["electric-pole"][item.place_result]
-    -- if (not pole.draw_copper_wires or pole.draw_copper_wires == true) -- exclude poles without copper wire connection
     if pole.draw_copper_wires ~= false -- exclude poles without copper wire connection
     and pole.minable and pole.minable.result and pole.minable.result == item.name then
       pole.fast_replaceable_group = pole.fast_replaceable_group or "electric-pole"
@@ -91,10 +85,7 @@ for _, item in pairs (data.raw["item"]) do
       newItem.icons = flib.create_icons(item, lep_icons_layer) or lep_icons_layer
       newItem.localised_name = newPole.localised_name
       newItem.order = item.order.."-0"
-      -- log("group: "..tostring(item.subgroup).." order: "..tostring(item.order) )
-
       newPole.icons = newPole.icons or newItem.icons -- use item icon for lighted pole in case base pole entity had none
-
 
       local hidden_lamp = flib.copy_prototype(data.raw["lamp"]["small-lamp"], newName.."-lamp", true)
       hidden_lamp.icons = newPole.icons
@@ -158,16 +149,17 @@ for _, item in pairs (data.raw["item"]) do
       for _, recipe in pairs (data.raw["recipe"]) do
         if recipe.results then
           for _, r in pairs(recipe.results) do
-            if (not r.type or r.type == "item") and r.name and r.name == item.name then
+            if (not r.type or r.type == "item") and (r.name and r.name == item.name or r[1] == item.name) then
               if recipe.subgroup then newRecipe.subgroup = recipe.subgroup end
               if recipe.order then newRecipe.order = recipe.order.."-0" end
+              log(format("[LEP+] sorting new recipe according to recipe \"%s\" subgroup= \"%s\" order= \"%s\"", recipe.name, recipe.subgroup, recipe.order) )
               break
             end
           end
-        -- take first recipe
         elseif recipe.result == item.name then
           if recipe.subgroup then newRecipe.subgroup = recipe.subgroup end
           if recipe.order then newRecipe.order = recipe.order.."-0" end
+          log(format("[LEP+] sorting new recipe according to recipe \"%s\" subgroup= \"%s\" order= \"%s\"", recipe.name, recipe.subgroup, recipe.order) )
           break
         end
       end
@@ -222,5 +214,5 @@ if tech then
     end
   end
 else
-  error("Technology "..alternative_technology.." not found")
+  error("[LEP+] ERROR: Technology "..alternative_technology.." not found")
 end

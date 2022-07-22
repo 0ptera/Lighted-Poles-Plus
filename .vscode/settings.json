@@ -37,5 +37,12 @@
     ],
     "Lua.diagnostics.disable": [
         "lowercase-global"
+    ],
+    "factorio.versions": [
+        {
+            "name": "Factorio 1.1",
+            "factorioPath": "d:\\Factorio_1.1\\bin\\x64\\factorio.exe",
+            "active": true
+        }
     ]
 }

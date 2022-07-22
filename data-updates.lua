@@ -20,44 +20,46 @@ local alternative_technology = "optics"
 local pole_names = {} -- dictionary [original pole item name] -> lighted pole entity/item/recipe name
 local lightedPoles = {}
 
-
--- check if recipe contains entry from Items
-function GetItemFromRecipeResult(recipe)
-  if recipe.result and pole_names[recipe.result] then
-    return recipe.result
-  end
-  if recipe.normal and recipe.normal.result and pole_names[recipe.normal.result] then
-    return recipe.normal.result
-  end
-  if recipe.expensive and recipe.expensive.result and pole_names[recipe.expensive.result] then
-    return recipe.expensive.result
-  end
-
-  if recipe.results then
-    for _, r in pairs(recipe.results) do
-      if (not r.type or r.type == "item") and (r.name and pole_names[r.name] or pole_names[r[1]]) then
-        return r.name or r[1]
+-- finds all recipes by result
+function find_recipe_by_results(search_products)
+  local found_recipes = {} -- recipes producing the product
+  for _, recipe in pairs (data.raw["recipe"]) do
+    if recipe.result and search_products[recipe.result] then
+      found_recipes[recipe.name] = {product=recipe.result, subgroup=recipe.subgroup, order=recipe.order}
+    end
+    if recipe.normal and recipe.normal.result and search_products[recipe.normal.result] then
+      found_recipes[recipe.name] = {product=recipe.normal.result, subgroup=recipe.subgroup, order=recipe.order}
+    end
+    if recipe.expensive and recipe.expensive.result and search_products[recipe.expensive.result] then
+      found_recipes[recipe.name] = {product=recipe.expensive.result, subgroup=recipe.subgroup, order=recipe.order}
+    end
+    if recipe.results then
+      for _, r in pairs(recipe.results) do
+        if type(r) == "table" and (not r.type or r.type == "item")
+        and (r.name and search_products[r.name] or search_products[r[1]]) then
+          found_recipes[recipe.name] = {product=r.name or r[1], subgroup=recipe.subgroup, order=recipe.order}
+        end
+      end
+    end
+    if recipe.normal and recipe.normal.results then
+      for _, r in pairs(recipe.normal.results) do
+        if type(r) == "table" and (not r.type or r.type == "item")
+        and (r.name and search_products[r.name] or search_products[r[1]]) then
+          found_recipes[recipe.name] = {product=r.name or r[1], subgroup=recipe.subgroup, order=recipe.order}
+        end
+      end
+    end
+    if recipe.expensive and recipe.expensive.results then
+      for _, r in pairs(recipe.expensive.results) do
+        if type(r) == "table" and (not r.type or r.type == "item")
+        and (r.name and search_products[r.name] or search_products[r[1]]) then
+          found_recipes[recipe.name] = {product=r.name or r[1], subgroup=recipe.subgroup, order=recipe.order}
+        end
       end
     end
   end
-  if recipe.normal and recipe.normal.results then
-    for _, item in pairs(recipe.normal.results) do
-      if (not r.type or r.type == "item") and (r.name and pole_names[r.name] or pole_names[r[1]]) then
-        return r.name or r[1]
-      end
-    end
-  end
-  if recipe.expensive and recipe.expensive.results then
-    for _, item in pairs(recipe.expensive.results) do
-      if (not r.type or r.type == "item") and (r.name and pole_names[r.name] or pole_names[r[1]]) then
-        return r.name or r[1]
-      end
-    end
-  end
-
-  return nil
+  return found_recipes
 end
-
 
 -- look through items for electric-poles should save looking through recipes and entities
 for _, item in pairs (data.raw["item"]) do
@@ -146,22 +148,14 @@ for _, item in pairs (data.raw["item"]) do
       }
 
       -- find original recipe so new recipe can be sorted next to it
-      for _, recipe in pairs (data.raw["recipe"]) do
-        if recipe.results then
-          for _, r in pairs(recipe.results) do
-            if (not r.type or r.type == "item") and (r.name and r.name == item.name or r[1] == item.name) then
-              if recipe.subgroup then newRecipe.subgroup = recipe.subgroup end
-              if recipe.order then newRecipe.order = recipe.order.."-0" end
-              log(format("[LEP+] sorting new recipe according to recipe \"%s\" subgroup= \"%s\" order= \"%s\"", recipe.name, recipe.subgroup, recipe.order) )
-              break
-            end
-          end
-        elseif recipe.result == item.name then
-          if recipe.subgroup then newRecipe.subgroup = recipe.subgroup end
-          if recipe.order then newRecipe.order = recipe.order.."-0" end
-          log(format("[LEP+] sorting new recipe according to recipe \"%s\" subgroup= \"%s\" order= \"%s\"", recipe.name, recipe.subgroup, recipe.order) )
-          break
-        end
+      local recipes = find_recipe_by_results({[item.name] = true})
+      if recipes then
+        -- pick first recipe
+        local rec_name = next(recipes)
+        local rec = recipes[rec_name]
+        if rec.subgroup then newRecipe.subgroup = rec.subgroup end
+        if rec.order then newRecipe.order = rec.order.."-0" end
+        log(format("[LEP+] sorting new recipe according to recipe \"%s\" subgroup= \"%s\" order= \"%s\"", rec_name, rec.subgroup, rec.order) )
       end
 
       -- temporary store generated pole, will be added to data after generation is complete
@@ -171,39 +165,31 @@ for _, item in pairs (data.raw["item"]) do
       table.insert(lightedPoles, newRecipe)
     end
   end
-
 end
 data:extend(lightedPoles)
 
-local recipes_found = {}
+local recipe_lookup = find_recipe_by_results(pole_names)
+local techs_found = {}
 -- add to technology
 for _, tech in pairs(data.raw["technology"]) do
   if tech.effects then
     for _, effect in pairs(tech.effects) do
-      if effect.recipe and data.raw["recipe"][effect.recipe] then
-        local base_item = GetItemFromRecipeResult(data.raw["recipe"][effect.recipe])
-        if base_item then
-          if data.raw["technology"][tech.name].effects then
-            log("[LEP+] found original pole "..base_item.." in technology "..tech.name..", inserting "..pole_names[base_item].." into technology "..tech.name)
-            table.insert(data.raw["technology"][tech.name].effects, {type="unlock-recipe",recipe=pole_names[base_item]})
-          else
-            log("[LEP+] found original pole "..base_item.." in technology "..tech.name..", creating new effects table for "..pole_names[base_item].." in technology "..tech.name)
-            data.raw["technology"][tech.name].effects = {type="unlock-recipe",recipe=pole_names[base_item]}
-          end
-          -- multiple techs may unlock the same recipe
-          recipes_found[base_item] = recipes_found[base_item] and recipes_found[base_item] + 1 or 1
-          -- pole_names[base_item] = nil
-        end
+      if effect.recipe and recipe_lookup[effect.recipe] then
+        local base_item = recipe_lookup[effect.recipe].product
+        log("[LEP+] found original pole "..base_item.." in technology "..tech.name..", inserting "..pole_names[base_item].." into technology "..tech.name)
+        table.insert(data.raw["technology"][tech.name].effects, {type="unlock-recipe",recipe=pole_names[base_item]})
+        -- multiple techs may unlock the same recipe
+        techs_found[base_item] = techs_found[base_item] and techs_found[base_item] + 1 or 1
       end
     end
   end
 end
 
--- add unassigned recipes to optics
+-- add unassigned recipes to backup technology (optics)
 local tech = data.raw.technology[alternative_technology]
 if tech then
   for original_pole, lighted_pole in pairs(pole_names) do
-    if not recipes_found[original_pole] then
+    if not techs_found[original_pole] then
       if tech.effects then
         log("[LEP+] no technology unlock found for "..original_pole..", inserting "..lighted_pole.." into technology "..tech.name)
         table.insert(tech.effects, {type="unlock-recipe", recipe=lighted_pole})

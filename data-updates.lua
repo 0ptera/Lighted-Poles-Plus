@@ -34,23 +34,23 @@ function GetItemFromRecipeResult(recipe)
   end
 
   if recipe.results then
-    for _, r in pairs(recipe.results) do
-      if (not r.type or r.type == "item") and (r.name and pole_names[r.name] or pole_names[r[1]]) then
-        return r.name or r[1]
+    for _, item in pairs(recipe.results) do
+      if (not item.type or item.type == "item") and (item.name and pole_names[item.name] or pole_names[item[1]]) then
+        return item.name or item[1]
       end
     end
   end
   if recipe.normal and recipe.normal.results then
     for _, item in pairs(recipe.normal.results) do
-      if (not r.type or r.type == "item") and (r.name and pole_names[r.name] or pole_names[r[1]]) then
-        return r.name or r[1]
+      if (not item.type or item.type == "item") and (item.name and pole_names[item.name] or pole_names[item[1]]) then
+        return item.name or item[1]
       end
     end
   end
   if recipe.expensive and recipe.expensive.results then
     for _, item in pairs(recipe.expensive.results) do
-      if (not r.type or r.type == "item") and (r.name and pole_names[r.name] or pole_names[r[1]]) then
-        return r.name or r[1]
+      if (not item.type or item.type == "item") and (item.name and pole_names[item.name] or pole_names[item[1]]) then
+        return item.name or item[1]
       end
     end
   end

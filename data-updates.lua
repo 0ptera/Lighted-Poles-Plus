@@ -149,13 +149,11 @@ for _, item in pairs (data.raw["item"]) do
 
       -- find original recipe so new recipe can be sorted next to it
       local recipes = find_recipe_by_results({[item.name] = true})
-      if recipes then
-        -- pick first recipe
-        local rec_name = next(recipes)
-        local rec = recipes[rec_name]
-        if rec.subgroup then newRecipe.subgroup = rec.subgroup end
-        if rec.order then newRecipe.order = rec.order.."-0" end
-        log(format("[LEP+] sorting new recipe according to recipe \"%s\" subgroup= \"%s\" order= \"%s\"", rec_name, rec.subgroup, rec.order) )
+      for k,v in pairs(recipes) do
+        if v.subgroup then newRecipe.subgroup = v.subgroup end
+        if v.order then newRecipe.order = v.order.."-0" end
+        log(format("[LEP+] sorting new recipe according to recipe \"%s\" subgroup= \"%s\" order= \"%s\"", k, v.subgroup, v.order) )
+        break -- pick first recipe
       end
 
       -- temporary store generated pole, will be added to data after generation is complete

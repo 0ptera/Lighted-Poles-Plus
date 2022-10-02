@@ -86,7 +86,7 @@ for _, item in pairs (data.raw["item"]) do
       local newItem = flib.copy_prototype(item, newName, true)
       newItem.icons = flib.create_icons(item, lep_icons_layer) or lep_icons_layer
       newItem.localised_name = newPole.localised_name
-      newItem.order = item.order.."-0"
+      newItem.order = (item.order or "").."-0"
       newPole.icons = newPole.icons or newItem.icons -- use item icon for lighted pole in case base pole entity had none
 
       local hidden_lamp = flib.copy_prototype(data.raw["lamp"]["small-lamp"], newName.."-lamp", true)

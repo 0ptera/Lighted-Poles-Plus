@@ -68,7 +68,9 @@ for _, item in pairs (data.raw["item"]) do
     -- log("[LEP+] found pole "..item.place_result.." in item "..item.name)
     local pole = data.raw["electric-pole"][item.place_result]
     if pole.draw_copper_wires ~= false -- exclude poles without copper wire connection
+    and pole.maximum_wire_distance and pole.maximum_wire_distance > 0 -- exclude poles with no wire reach
     and pole.minable and pole.minable.result and pole.minable.result == item.name then
+
       pole.fast_replaceable_group = pole.fast_replaceable_group or "electric-pole"
 
       local newName = "lighted-"..pole.name

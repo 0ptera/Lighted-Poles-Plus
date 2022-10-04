@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.8.0
+Date: 2022-10-04
+  Changes:
+    - only create lighted variant for poles with maximum_wire_distance > 0
+    - removed blacklist entries for poles with 0 wire reach
+---------------------------------------------------------------------------------------------------
 Version: 1.7.6
 Date: 2022-10-02
   Bugfixes:

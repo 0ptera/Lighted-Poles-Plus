@@ -21,7 +21,7 @@ data:extend({
     name = "lepp_pole_blacklist",
     order = "ba",
     setting_type = "startup",
-    default_value = "bi-power-to-rail-pole,bi-rail-hidden-power-pole,ee-super-electric-pole,ee-super-substation,biotech-biosolarpanel-pole",
+    default_value = "bi-power-to-rail-pole,bi-rail-hidden-power-pole,ee-super-electric-pole,ee-super-substation",
   },
 })
 

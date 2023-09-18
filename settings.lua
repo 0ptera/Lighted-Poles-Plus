@@ -26,7 +26,7 @@ data:extend({
   {
     type = "string-setting",
     name = "lepp_pole_blacklist",
-    order = "ba",
+    order = "bb",
     setting_type = "startup",
     allow_blank = true,
     default_value = "bi-power-to-rail-pole,bi-rail-hidden-power-pole,ee-super-electric-pole,ee-super-substation",
@@ -34,7 +34,7 @@ data:extend({
   {
     type = "string-setting",
     name = "lepp_tech_blacklist",
-    order = "bb",
+    order = "bc",
     setting_type = "startup",
     allow_blank = true,
     default_value = "",
@@ -42,11 +42,9 @@ data:extend({
   {
     type = "string-setting",
     name = "lepp_tech_fallback",
-    order = "bc",
+    order = "bd",
     setting_type = "startup",
     allow_blank = false,
     default_value = "optics",
   },
 })
-
-

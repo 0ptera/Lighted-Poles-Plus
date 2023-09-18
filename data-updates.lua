@@ -72,7 +72,7 @@ for _, item in pairs (data.raw["item"]) do
   if item.place_result and data.raw["electric-pole"][item.place_result] and not pole_entity_blacklist[item.place_result] then
     -- log("[LEP+] found pole "..item.place_result.." in item "..item.name)
     local pole = data.raw["electric-pole"][item.place_result]
-    if pole.draw_copper_wires ~= false -- exclude poles without copper wire connection
+    if (pole.draw_copper_wires ~= false or settings.startup["lepp_include_wireless_pole"].value == true) -- exclude poles without copper wire connection
     and pole.maximum_wire_distance and pole.maximum_wire_distance > 0 -- exclude poles with no wire reach
     and pole.minable and pole.minable.result and pole.minable.result == item.name then
 

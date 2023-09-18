@@ -17,6 +17,13 @@ data:extend({
     minimum_value = 1,
   },
   {
+    type = "bool-setting",
+    name = "lepp_include_wireless_pole",
+    order = "ba",
+    setting_type = "startup",
+    default_value = "false",
+  },
+  {
     type = "string-setting",
     name = "lepp_pole_blacklist",
     order = "ba",

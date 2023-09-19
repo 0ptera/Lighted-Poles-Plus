@@ -17,11 +17,11 @@ data:extend({
     minimum_value = 1,
   },
   {
-    type = "bool-setting",
-    name = "lepp_include_wireless_pole",
+    type = "string-setting",
+    name = "lepp_pole_whitelist",
     order = "ba",
     setting_type = "startup",
-    default_value = "false",
+    default_value = "fish-pole,slp-dec-med-pole,slp-dec-big-pole,slp-dec-sub-pole",
   },
   {
     type = "string-setting",

@@ -21,6 +21,7 @@ data:extend({
     name = "lepp_pole_whitelist",
     order = "ba",
     setting_type = "startup",
+    allow_blank = true,
     default_value = "fish-pole,slp-dec-med-pole,slp-dec-big-pole,slp-dec-sub-pole",
   },
   {
